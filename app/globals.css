@@ -1,0 +1,272 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* OwnaFarm Game Theme - Vibrant Farming Colors */
+:root {
+  /* Primary: Earthy Green for farming */
+  --background: oklch(0.98 0.01 120);
+  --foreground: oklch(0.2 0.04 120);
+
+  /* Card: Warm cream/paper texture feel */
+  --card: oklch(0.99 0.005 90);
+  --card-foreground: oklch(0.2 0.04 120);
+
+  --popover: oklch(0.99 0.005 90);
+  --popover-foreground: oklch(0.2 0.04 120);
+
+  /* Primary: Vibrant Green */
+  --primary: oklch(0.55 0.2 140);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Secondary: Golden Yellow (coins/gold) */
+  --secondary: oklch(0.85 0.18 85);
+  --secondary-foreground: oklch(0.25 0.05 85);
+
+  /* Muted: Soft earth tones */
+  --muted: oklch(0.92 0.02 90);
+  --muted-foreground: oklch(0.45 0.03 120);
+
+  /* Accent: Sky Blue (water) */
+  --accent: oklch(0.7 0.15 230);
+  --accent-foreground: oklch(0.99 0 0);
+
+  /* Destructive: Warm Red */
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(0.88 0.03 120);
+  --input: oklch(0.95 0.01 120);
+  --ring: oklch(0.55 0.2 140);
+
+  /* Game specific colors */
+  --gold: oklch(0.78 0.18 75);
+  --water: oklch(0.65 0.18 230);
+  --xp: oklch(0.65 0.22 320);
+  --success: oklch(0.6 0.2 145);
+
+  --chart-1: oklch(0.55 0.2 140);
+  --chart-2: oklch(0.78 0.18 75);
+  --chart-3: oklch(0.65 0.18 230);
+  --chart-4: oklch(0.65 0.22 320);
+  --chart-5: oklch(0.6 0.15 30);
+
+  --radius: 1rem;
+
+  --sidebar: oklch(0.96 0.02 120);
+  --sidebar-foreground: oklch(0.2 0.04 120);
+  --sidebar-primary: oklch(0.55 0.2 140);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.03 120);
+  --sidebar-accent-foreground: oklch(0.2 0.04 120);
+  --sidebar-border: oklch(0.88 0.03 120);
+  --sidebar-ring: oklch(0.55 0.2 140);
+}
+
+.dark {
+  --background: oklch(0.15 0.02 140);
+  --foreground: oklch(0.95 0.01 120);
+
+  --card: oklch(0.2 0.025 140);
+  --card-foreground: oklch(0.95 0.01 120);
+
+  --popover: oklch(0.2 0.025 140);
+  --popover-foreground: oklch(0.95 0.01 120);
+
+  --primary: oklch(0.65 0.22 140);
+  --primary-foreground: oklch(0.1 0.02 140);
+
+  --secondary: oklch(0.75 0.16 85);
+  --secondary-foreground: oklch(0.15 0.03 85);
+
+  --muted: oklch(0.25 0.02 140);
+  --muted-foreground: oklch(0.65 0.02 120);
+
+  --accent: oklch(0.6 0.15 230);
+  --accent-foreground: oklch(0.1 0.02 230);
+
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(0.95 0 0);
+
+  --border: oklch(0.3 0.02 140);
+  --input: oklch(0.25 0.02 140);
+  --ring: oklch(0.65 0.22 140);
+
+  --gold: oklch(0.75 0.16 75);
+  --water: oklch(0.6 0.16 230);
+  --xp: oklch(0.6 0.2 320);
+  --success: oklch(0.55 0.18 145);
+
+  --chart-1: oklch(0.65 0.22 140);
+  --chart-2: oklch(0.75 0.16 75);
+  --chart-3: oklch(0.6 0.16 230);
+  --chart-4: oklch(0.6 0.2 320);
+  --chart-5: oklch(0.55 0.15 30);
+
+  --sidebar: oklch(0.18 0.02 140);
+  --sidebar-foreground: oklch(0.95 0.01 120);
+  --sidebar-primary: oklch(0.65 0.22 140);
+  --sidebar-primary-foreground: oklch(0.1 0.02 140);
+  --sidebar-accent: oklch(0.25 0.02 140);
+  --sidebar-accent-foreground: oklch(0.95 0.01 120);
+  --sidebar-border: oklch(0.3 0.02 140);
+  --sidebar-ring: oklch(0.65 0.22 140);
+}
+
+@theme inline {
+  --font-sans: "Nunito", "Nunito Fallback", sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-water: var(--water);
+  --color-xp: var(--xp);
+  --color-success: var(--success);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Game-like animations */
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--primary);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+  75% {
+    transform: translateX(2px) rotate(1deg);
+  }
+}
+
+@keyframes grow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes water-drop {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+.animate-grow {
+  animation: grow 0.3s ease-out forwards;
+}
+
+.animate-water-drop {
+  animation: water-drop 0.5s ease-out forwards;
+}
+
+/* Game card styles */
+.game-card {
+  @apply relative overflow-hidden rounded-2xl bg-card border-2 border-border shadow-lg;
+  background: linear-gradient(145deg, var(--card), var(--muted));
+}
+
+.game-card::before {
+  content: "";
+  @apply absolute inset-0 opacity-20;
+  background: radial-gradient(circle at 30% 20%, white, transparent 50%);
+}
+
+/* Bottom nav special button */
+.nav-main-btn {
+  @apply relative -mt-8 rounded-full p-4 shadow-xl;
+  background: linear-gradient(145deg, var(--primary), oklch(0.45 0.2 140));
+}
+
+.nav-main-btn::before {
+  content: "";
+  @apply absolute inset-1 rounded-full opacity-30;
+  background: radial-gradient(circle at 30% 30%, white, transparent 60%);
+}
