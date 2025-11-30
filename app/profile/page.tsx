@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/contexts/language-context"
 import { useGame } from "@/contexts/game-context"
+import { useAudio } from "@/contexts/audio-context"
 import { GameHeader } from "@/components/layout/game-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { EditProfileModal } from "@/components/modals/edit-profile-modal"
@@ -43,12 +44,12 @@ const achievements = [
 export default function ProfilePage() {
   const { t, language, setLanguage } = useLanguage()
   const { user, crops, updateUser } = useGame()
+  const { isPlaying, toggleAudio } = useAudio()
   const [showLanguageSelector, setShowLanguageSelector] = useState(false)
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [darkMode, setDarkMode] = useState(false)
-  const [sound, setSound] = useState(true)
 
   const languages: Language[] = ["en", "id", "zh"]
 
@@ -265,7 +266,7 @@ export default function ProfilePage() {
                 <Volume2 className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">{t.profile.sound}</span>
               </div>
-              <Switch checked={sound} onCheckedChange={setSound} />
+              <Switch checked={isPlaying} onCheckedChange={toggleAudio} />
             </div>
           </div>
         </section>

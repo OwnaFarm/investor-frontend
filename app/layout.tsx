@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { LanguageProvider } from "@/contexts/language-context"
 import { GameProvider } from "@/contexts/game-context"
+import { AudioProvider } from "@/contexts/audio-context"
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -39,7 +40,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <LanguageProvider>
-          <GameProvider>{children}</GameProvider>
+          <AudioProvider>
+            <GameProvider>{children}</GameProvider>
+          </AudioProvider>
         </LanguageProvider>
         <Analytics />
       </body>
