@@ -6,6 +6,7 @@ import { GameHeader } from "@/components/layout/game-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { CropCard } from "@/components/game/crop-card"
 import { SuccessModal } from "@/components/modals/success-modal"
+import { CCTVModal } from "@/components/modals/cctv-modal"
 import { motion } from "framer-motion"
 import { Sprout, Droplets, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,8 @@ export default function FarmPage() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [harvestResult, setHarvestResult] = useState({ title: "", message: "", gold: 0, xp: 0 })
+  const [cctvOpen, setCctvOpen] = useState(false)
+  const [selectedCrop, setSelectedCrop] = useState<(typeof crops)[0] | null>(null)
 
   const filteredCrops = crops.filter((crop) => {
     if (activeTab === "all") return true
@@ -56,6 +59,14 @@ export default function FarmPage() {
 
   const handleWaterAll = () => {
     waterAllCrops()
+  }
+
+  const handleViewCCTV = (cropId: string) => {
+    const crop = crops.find((c) => c.id === cropId)
+    if (crop) {
+      setSelectedCrop(crop)
+      setCctvOpen(true)
+    }
   }
 
   return (
@@ -137,6 +148,7 @@ export default function FarmPage() {
                   canWater={user.water > 0}
                   onWater={() => handleWater(crop.id)}
                   onHarvest={() => handleHarvest(crop.id)}
+                  onViewCCTV={() => handleViewCCTV(crop.id)}
                 />
               </motion.div>
             ))}
@@ -165,6 +177,17 @@ export default function FarmPage() {
         message={harvestResult.message}
         reward={{ gold: harvestResult.gold, xp: harvestResult.xp }}
       />
+
+      {/* CCTV Modal */}
+      {selectedCrop && (
+        <CCTVModal
+          isOpen={cctvOpen}
+          onClose={() => setCctvOpen(false)}
+          cropName={selectedCrop.name}
+          location="West Java Farm, Block B"
+          imageUrl={selectedCrop.image}
+        />
+      )}
     </div>
   )
 }

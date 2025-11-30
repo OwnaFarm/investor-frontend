@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/contexts/language-context"
 import { motion } from "framer-motion"
-import { Droplets, Clock, TrendingUp } from "lucide-react"
+import { Droplets, Clock, TrendingUp, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,7 @@ interface CropCardProps {
   canWater?: boolean
   onWater?: () => void
   onHarvest?: () => void
+  onViewCCTV?: () => void
 }
 
 export function CropCard({
@@ -32,6 +33,7 @@ export function CropCard({
   canWater = true,
   onWater,
   onHarvest,
+  onViewCCTV,
 }: CropCardProps) {
   const { t } = useLanguage()
   const [isWatering, setIsWatering] = useState(false)
@@ -139,16 +141,32 @@ export function CropCard({
       {/* Action Buttons */}
       <div className="flex gap-2">
         {status === "growing" && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 gap-1 border-accent text-accent hover:bg-accent/10 bg-transparent"
-            onClick={handleWater}
-            disabled={!canWater}
-          >
-            <Droplets className="w-4 h-4" />
-            {t.crops.water}
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 gap-1 border-accent text-accent hover:bg-accent/10 bg-transparent"
+              onClick={handleWater}
+              disabled={!canWater}
+            >
+              <Droplets className="w-4 h-4" />
+              {t.crops.water}
+            </Button>
+            {onViewCCTV && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-10 px-0 border-primary/50 text-primary hover:bg-primary/10 bg-transparent"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewCCTV()
+                }}
+                title="View CCTV"
+              >
+                <Camera className="w-4 h-4" />
+              </Button>
+            )}
+          </>
         )}
         {status === "ready" && (
           <Button size="sm" className="flex-1 gap-1 bg-success hover:bg-success/90 text-white" onClick={onHarvest}>
