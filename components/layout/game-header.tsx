@@ -26,7 +26,7 @@ export function GameHeader({
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b-2 border-border">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* User Info */}
+        {/* Logo & User Info */}
         <div className="flex items-center gap-3">
           <motion.div
             whileTap={{ scale: 0.95 }}
