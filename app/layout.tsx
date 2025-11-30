@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   generator: "v0.app",
   manifest: "/manifest.json",
   icons: {
-    icon: "/ownaFarm.png",
-    apple: "/ownaFarm.png",
+    icon: "/ownaFarm_11zon.png",
+    apple: "/ownaFarm_11zon.png",
   },
 }
 
