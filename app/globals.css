@@ -255,7 +255,7 @@
 
 .game-card::before {
   content: "";
-  @apply absolute inset-0 opacity-20;
+  @apply absolute inset-0 opacity-20 pointer-events-none;
   background: radial-gradient(circle at 30% 20%, white, transparent 50%);
 }
 
@@ -267,6 +267,6 @@
 
 .nav-main-btn::before {
   content: "";
-  @apply absolute inset-1 rounded-full opacity-30;
+  @apply absolute inset-1 rounded-full opacity-30 pointer-events-none;
   background: radial-gradient(circle at 30% 30%, white, transparent 60%);
 }
