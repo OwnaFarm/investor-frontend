@@ -1,3 +1,0 @@
-;/*FB_PKG_DELIM*/
-
-__d("LSUpdateSearchQueryStatus",[],(function(t,n,r,o,a,i){function e(){var e=arguments,t=e[e.length-1],n=[],r=[];return t.sequence([function(n){return t.sequence([function(n){return t.i64.eq(e[1],t.i64.cast([0,1]))?t.forEach(t.db.table(67).fetch([[[e[0],e[5]]]]),function(t){var n=t.update,r=t.item;return n({statusPrimary:e[2],endTimeMs:e[3],resultCount:e[4]})}):t.resolve()},function(n){return t.i64.eq(e[1],t.i64.cast([0,2]))?t.forEach(t.db.table(67).fetch([[[e[0],e[5]]]]),function(t){var n=t.update,r=t.item;return n({statusSecondary:e[2],endTimeMs:e[3],resultCount:e[4]})}):t.resolve()}])},function(e){return t.resolve(r)}])}e.__sproc_name__="LSSearchUpdateSearchQueryStatusStoredProcedure",e.__tables__=["search_queries"],a.exports=e}),null);
