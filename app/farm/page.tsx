@@ -184,8 +184,8 @@ export default function FarmPage() {
           isOpen={cctvOpen}
           onClose={() => setCctvOpen(false)}
           cropName={selectedCrop.name}
-          location="West Java Farm, Block B"
-          imageUrl={selectedCrop.image}
+          location={selectedCrop.location || "West Java Farm, Block B"}
+          imageUrl={selectedCrop.cctvImage || selectedCrop.image}
         />
       )}
     </div>

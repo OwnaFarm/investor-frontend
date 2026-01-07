@@ -90,6 +90,21 @@ const mockSeeds = [
     risk: "medium" as const,
     badge: "new" as const,
   },
+  {
+    id: "7",
+    name: "Selada Hidroponik",
+    image: "/cctv-sayur-selada.png",
+    cctvImage: "/cctv-sayur-selada.png",
+    location: "GreenHouse Lembang, Bandung Barat",
+    price: 350,
+    yieldPercent: 16,
+    duration: 21,
+    offtaker: "PT. Sayurbox",
+    targetFund: 35000,
+    funded: 28000,
+    risk: "low" as const,
+    badge: "hot" as const,
+  },
 ]
 
 const filters = ["all", "featured", "lowRisk", "mediumRisk"] as const
@@ -135,6 +150,8 @@ export default function ShopPage() {
         addCrop({
           name: selectedSeed.name,
           image: selectedSeed.image,
+          cctvImage: (selectedSeed as { cctvImage?: string }).cctvImage,
+          location: (selectedSeed as { location?: string }).location,
           progress: 0,
           daysLeft: selectedSeed.duration,
           yieldPercent: selectedSeed.yieldPercent,
