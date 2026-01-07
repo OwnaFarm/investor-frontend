@@ -1,0 +1,4 @@
+;/*FB_PKG_DELIM*/
+
+__d("InstagramWebPostPageFalcoEvent",["FalcoLoggerInternal","getFalcoLogPolicy_DO_NOT_USE"],(function(t,n,r,o,a,i,l){"use strict";var e=r("getFalcoLogPolicy_DO_NOT_USE")("5240"),s=o("FalcoLoggerInternal").create("instagram_web_post_page",e),u=s;l.default=u}),98);
+__d("logPolarisPostModalOpen",["InstagramWebPostPageFalcoEvent","InstagramWebPushInfo","PolarisConfig"],(function(t,n,r,o,a,i,l){"use strict";function e(e,t,n){r("InstagramWebPostPageFalcoEvent").log(function(){return{appid:o("PolarisConfig").getIGAppID(),containermodule:e,event_name:"post_modal_open",frontend_env:r("InstagramWebPushInfo").frontend_env,in_modal:!0,media_type:t!=null?t.toString():"0",site_entrypoint:n}})}l.default=e}),98);
