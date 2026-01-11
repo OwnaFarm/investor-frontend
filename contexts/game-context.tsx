@@ -6,6 +6,8 @@ interface Crop {
   id: string
   name: string
   image: string
+  cctvImage?: string
+  location?: string
   progress: number
   daysLeft: number
   yieldPercent: number
@@ -95,6 +97,19 @@ const initialCrops: Crop[] = [
     status: "growing",
     plantedAt: new Date(),
   },
+  {
+    id: "6",
+    name: "Selada Hidroponik",
+    image: "/cctv-sayur-selada.png",
+    cctvImage: "/cctv-sayur-selada.png",
+    location: "GreenHouse Lembang, Bandung Barat",
+    progress: 75,
+    daysLeft: 7,
+    yieldPercent: 16,
+    invested: 350,
+    status: "growing",
+    plantedAt: new Date(),
+  },
 ]
 
 const initialUser: UserProfile = {
@@ -119,12 +134,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser))
-      } catch {}
+      } catch { }
     }
     if (savedCrops) {
       try {
         setCrops(JSON.parse(savedCrops))
-      } catch {}
+      } catch { }
     }
     setMounted(true)
   }, [])
