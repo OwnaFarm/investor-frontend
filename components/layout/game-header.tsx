@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/language-context"
 import { Coins, Droplets, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
+import { ConnectWallet } from "@/components/wallet"
 
 interface GameHeaderProps {
   gold?: number
@@ -43,9 +44,7 @@ export function GameHeader({
           </div>
         </div>
 
-        {/* Currency Stats */}
         <div className="flex items-center gap-2">
-          {/* Gold */}
           <motion.div
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-1.5 bg-secondary/20 rounded-full px-3 py-1.5 border border-secondary/30"
@@ -54,7 +53,6 @@ export function GameHeader({
             <span className="text-sm font-bold text-secondary-foreground">{gold.toLocaleString()}</span>
           </motion.div>
 
-          {/* Water */}
           <motion.div
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-1.5 bg-accent/20 rounded-full px-3 py-1.5 border border-accent/30"
@@ -63,7 +61,6 @@ export function GameHeader({
             <span className="text-sm font-bold text-accent-foreground">{water}</span>
           </motion.div>
 
-          {/* XP (hidden on small screens) */}
           <motion.div
             whileTap={{ scale: 0.95 }}
             className="hidden sm:flex items-center gap-1.5 bg-xp/20 rounded-full px-3 py-1.5 border border-xp/30"
@@ -73,6 +70,8 @@ export function GameHeader({
               {xp.toLocaleString()}
             </span>
           </motion.div>
+
+          <ConnectWallet />
         </div>
       </div>
     </header>

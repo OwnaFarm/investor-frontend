@@ -6,6 +6,8 @@ import "./globals.css"
 import { LanguageProvider } from "@/contexts/language-context"
 import { GameProvider } from "@/contexts/game-context"
 import { AudioProvider } from "@/contexts/audio-context"
+import { PrivyWalletProvider } from "@/contexts/privy-provider"
+import { Toaster } from "sonner"
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -39,11 +41,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <LanguageProvider>
-          <AudioProvider>
-            <GameProvider>{children}</GameProvider>
-          </AudioProvider>
-        </LanguageProvider>
+        <PrivyWalletProvider>
+          <LanguageProvider>
+            <AudioProvider>
+              <GameProvider>{children}</GameProvider>
+            </AudioProvider>
+          </LanguageProvider>
+        </PrivyWalletProvider>
+        <Toaster position="top-center" richColors />
         <Analytics />
       </body>
     </html>
