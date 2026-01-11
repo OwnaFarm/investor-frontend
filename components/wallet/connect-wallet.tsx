@@ -55,10 +55,10 @@ function ConnectWalletClient() {
     }
   }, [authenticated, wallets, ready, setAddress, setIsConnected, setIsLoading, setChainId, reset])
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     try {
       setIsLoading(true)
-      await login()
+      login()
       toast.info("Please complete the wallet connection")
     } catch (error) {
       toast.error("Failed to connect wallet")

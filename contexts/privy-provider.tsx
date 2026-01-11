@@ -1,21 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import type React from "react"
+import type { PrivyClientConfig } from "@privy-io/react-auth"
 import { PrivyProvider } from "@privy-io/react-auth"
 import { WagmiProvider } from "@privy-io/wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createConfig, http } from "wagmi"
 import { mantle } from "wagmi/chains"
-
-const queryClient = new QueryClient()
-
-const wagmiConfig = createConfig({
-  chains: [mantle],
-  transports: {
-    [mantle.id]: http(),
-  },
-})
 
 interface PrivyWalletProviderProps {
   children: React.ReactNode
@@ -28,6 +20,47 @@ export function PrivyWalletProvider({ children }: PrivyWalletProviderProps) {
     setMounted(true)
   }, [])
 
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            retry: false,
+          },
+        },
+      }),
+    []
+  )
+
+  const wagmiConfig = useMemo(
+    () =>
+      createConfig({
+        chains: [mantle],
+        transports: {
+          [mantle.id]: http(),
+        },
+      }),
+    []
+  )
+
+  const privyConfig = useMemo<PrivyClientConfig>(
+    () => ({
+      appearance: {
+        theme: "dark",
+        accentColor: "#22c55e",
+        showWalletLoginFirst: true,
+      },
+      loginMethods: ["wallet", "email"],
+      embeddedWallets: {
+        createOnLogin: "users-without-wallets",
+      },
+      supportedChains: [mantle],
+      defaultChain: mantle,
+    }),
+    []
+  )
+
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
   if (!appId || !mounted) {
@@ -35,19 +68,7 @@ export function PrivyWalletProvider({ children }: PrivyWalletProviderProps) {
   }
 
   return (
-    <PrivyProvider
-      appId={appId}
-      config={{
-        appearance: {
-          theme: "dark",
-          accentColor: "#22c55e",
-        },
-        loginMethods: ["wallet", "email"],
-        embeddedWallets: {
-          createOnLogin: "users-without-wallets",
-        },
-      }}
-    >
+    <PrivyProvider appId={appId} config={privyConfig}>
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
       </QueryClientProvider>
