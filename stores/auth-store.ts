@@ -2,6 +2,12 @@ import { create } from 'zustand'
 import type { AuthStore, NonceResponse, LoginResponse } from '@/types'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_OWNA_FARM_API
+const AUTH_TOKEN_KEY = 'auth_token'
+
+const getStoredToken = (): string | null => {
+  if (typeof window === 'undefined') return null
+  return sessionStorage.getItem(AUTH_TOKEN_KEY)
+}
 
 const initialState = {
   token: null,
@@ -10,8 +16,15 @@ const initialState = {
   error: null,
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
+
+  initializeAuth: () => {
+    const storedToken = getStoredToken()
+    if (storedToken) {
+      set({ token: storedToken })
+    }
+  },
 
   getNonce: async (walletAddress: string): Promise<NonceResponse> => {
     set({ isLoading: true, error: null })
@@ -69,7 +82,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
       const data: LoginResponse = responseData
       
-      sessionStorage.setItem('auth_token', data.data.token)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(AUTH_TOKEN_KEY, data.data.token)
+      }
       
       set({
         token: data.data.token,
@@ -89,7 +104,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: () => {
-    sessionStorage.removeItem('auth_token')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(AUTH_TOKEN_KEY)
+    }
     set(initialState)
   },
 

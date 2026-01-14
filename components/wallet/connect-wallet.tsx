@@ -107,11 +107,15 @@ function ConnectWalletClient() {
     setChainId,
     reset: resetWallet,
   } = useWalletStore()
-  const { token, getNonce, login: authLogin, logout: authLogout } =
+  const { token, getNonce, login: authLogin, logout: authLogout, initializeAuth } =
     useAuthStore()
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [pendingAuth, setPendingAuth] = useState(false)
+
+  useEffect(() => {
+    initializeAuth()
+  }, [initializeAuth])
 
   useEffect(() => {
     if (!ready) {

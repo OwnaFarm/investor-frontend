@@ -28,6 +28,7 @@ export interface AuthState {
 }
 
 export interface AuthActions {
+  initializeAuth: () => void
   getNonce: (walletAddress: string) => Promise<NonceResponse>
   login: (walletAddress: string, signature: string, nonce: string) => Promise<void>
   logout: () => void
