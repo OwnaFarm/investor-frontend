@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useLanguage } from "@/contexts/language-context"
 import { useGame } from "@/contexts/game-context"
 import { GameHeader } from "@/components/layout/game-header"
@@ -8,24 +9,35 @@ import { CropCard } from "@/components/game/crop-card"
 import { SuccessModal } from "@/components/modals/success-modal"
 import { CCTVModal } from "@/components/modals/cctv-modal"
 import { motion } from "framer-motion"
-import { Sprout, Droplets, Leaf } from "lucide-react"
+import { Sprout, Droplets, Leaf, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
 import Link from "next/link"
+import { useCropStore, useAuthStore } from "@/stores"
+import { toast } from "sonner"
 
 const tabs = ["all", "growing", "ready"] as const
 
 export default function FarmPage() {
   const { t } = useLanguage()
-  const { user, crops, waterCrop, waterAllCrops, harvestCrop } = useGame()
+  const { user, waterCrop: gameWaterCrop, waterAllCrops, harvestCrop: gameHarvestCrop } = useGame()
+  const { token } = useAuthStore()
+  const { crops, isLoading, getCrops, waterCrop, syncHarvest } = useCropStore()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [harvestResult, setHarvestResult] = useState({ title: "", message: "", gold: 0, xp: 0 })
   const [cctvOpen, setCctvOpen] = useState(false)
-  const [selectedCrop, setSelectedCrop] = useState<(typeof crops)[0] | null>(null)
+  const [selectedCrop, setSelectedCrop] = useState<any>(null)
 
-  const filteredCrops = crops.filter((crop) => {
+  useEffect(() => {
+    if (token) {
+      getCrops(token).catch((error) => {
+        console.error('Failed to load crops:', error)
+      })
+    }
+  }, [token, getCrops])
+
+  const filteredCrops = (crops || []).filter((crop) => {
     if (activeTab === "all") return true
     return crop.status === activeTab
   })
@@ -36,25 +48,49 @@ export default function FarmPage() {
     ready: t.crops.ready,
   }
 
-  const growingCount = crops.filter((c) => c.status === "growing").length
-  const readyCount = crops.filter((c) => c.status === "ready").length
+  const growingCount = (crops || []).filter((c) => c.status === "growing").length
+  const readyCount = (crops || []).filter((c) => c.status === "ready").length
 
-  const handleWater = (cropId: string) => {
-    waterCrop(cropId)
+  const handleWater = async (cropId: string) => {
+    if (!token) {
+      toast.error("Please sign in to water crops")
+      return
+    }
+
+    try {
+      const result = await waterCrop(token, cropId)
+      gameWaterCrop(cropId)
+      toast.success(`Gained ${result.xp_gained} XP! Water remaining: ${result.water_remaining}`)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to water crop"
+      toast.error(errorMsg)
+    }
   }
 
-  const handleHarvest = (cropId: string) => {
-    const crop = crops.find((c) => c.id === cropId)
+  const handleHarvest = async (cropId: string) => {
+    const crop = (crops || []).find((c) => c.id === cropId)
     if (!crop) return
 
-    const earnings = harvestCrop(cropId)
-    setHarvestResult({
-      title: t.crops.harvested + "!",
-      message: `${crop.name} has been harvested successfully!`,
-      gold: earnings,
-      xp: 50,
-    })
-    setShowSuccessModal(true)
+    if (!token) {
+      toast.error("Please sign in to harvest crops")
+      return
+    }
+
+    try {
+      const harvestedCrop = await syncHarvest(token, cropId)
+      gameHarvestCrop(cropId)
+      
+      setHarvestResult({
+        title: t.crops.harvested + "!",
+        message: `${crop.name} has been harvested successfully!`,
+        gold: harvestedCrop.harvest_amount || crop.invested,
+        xp: 50,
+      })
+      setShowSuccessModal(true)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to harvest crop"
+      toast.error(errorMsg)
+    }
   }
 
   const handleWaterAll = () => {
@@ -62,7 +98,7 @@ export default function FarmPage() {
   }
 
   const handleViewCCTV = (cropId: string) => {
-    const crop = crops.find((c) => c.id === cropId)
+    const crop = (crops || []).find((c) => c.id === cropId)
     if (crop) {
       setSelectedCrop(crop)
       setCctvOpen(true)
@@ -81,7 +117,6 @@ export default function FarmPage() {
       />
 
       <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -89,7 +124,7 @@ export default function FarmPage() {
               {t.home.myFarm}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {crops.length} {t.home.activeCrops}
+              {(crops || []).length} {t.home.activeCrops}
             </p>
           </div>
           <Button
@@ -102,10 +137,9 @@ export default function FarmPage() {
           </Button>
         </div>
 
-        {/* Tab Filters */}
         <div className="flex gap-2">
           {tabs.map((tab) => {
-            const count = tab === "growing" ? growingCount : tab === "ready" ? readyCount : crops.length
+            const count = tab === "growing" ? growingCount : tab === "ready" ? readyCount : (crops || []).length
             return (
               <Button
                 key={tab}
@@ -133,8 +167,11 @@ export default function FarmPage() {
           })}
         </div>
 
-        {/* Crops Grid */}
-        {filteredCrops.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : filteredCrops.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
             {filteredCrops.map((crop, index) => (
               <motion.div
@@ -144,7 +181,16 @@ export default function FarmPage() {
                 transition={{ delay: index * 0.05 }}
               >
                 <CropCard
-                  {...crop}
+                  id={crop.id}
+                  name={crop.name}
+                  image={crop.image}
+                  cctvImage={crop.cctv_image}
+                  location={crop.location}
+                  progress={crop.progress}
+                  daysLeft={crop.days_left}
+                  yieldPercent={crop.yield_percent}
+                  invested={crop.invested}
+                  status={crop.status}
                   canWater={user.water > 0}
                   onWater={() => handleWater(crop.id)}
                   onHarvest={() => handleHarvest(crop.id)}
@@ -169,7 +215,6 @@ export default function FarmPage() {
 
       <BottomNav />
 
-      {/* Success Modal */}
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
@@ -178,14 +223,13 @@ export default function FarmPage() {
         reward={{ gold: harvestResult.gold, xp: harvestResult.xp }}
       />
 
-      {/* CCTV Modal */}
       {selectedCrop && (
         <CCTVModal
           isOpen={cctvOpen}
           onClose={() => setCctvOpen(false)}
           cropName={selectedCrop.name}
           location={selectedCrop.location || "West Java Farm, Block B"}
-          imageUrl={selectedCrop.cctvImage || selectedCrop.image}
+          imageUrl={selectedCrop.cctv_image || selectedCrop.image}
         />
       )}
     </div>
