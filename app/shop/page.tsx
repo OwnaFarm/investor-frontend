@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState, useCallback } from "react"
 import { useLanguage } from "@/contexts/language-context"
 import { useGame } from "@/contexts/game-context"
 import { GameHeader } from "@/components/layout/game-header"
@@ -8,117 +9,97 @@ import { SeedCard } from "@/components/game/seed-card"
 import { BuySeedModal } from "@/components/modals/buy-seed-modal"
 import { SuccessModal } from "@/components/modals/success-modal"
 import { motion } from "framer-motion"
-import { Filter, Sparkles } from "lucide-react"
+import { Filter, Sparkles, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useCropStore, useAuthStore, useMarketplaceStore } from "@/stores"
+import { toast } from "sonner"
+import type { MarketplaceInvoice } from "@/types"
 
-const mockSeeds = [
-  {
-    id: "1",
-    name: "Cabai Premium",
-    image: "/red-chili-seed-packet-cartoon.jpg",
-    price: 500,
-    yieldPercent: 18,
-    duration: 30,
-    offtaker: "PT. Indofood",
-    targetFund: 50000,
-    funded: 35000,
-    risk: "low" as const,
-    badge: "hot" as const,
-  },
-  {
-    id: "2",
-    name: "Jagung Manis",
-    image: "/corn-seed-packet-cartoon-cute.jpg",
-    price: 300,
-    yieldPercent: 15,
-    duration: 45,
-    offtaker: "PT. Mayora",
-    targetFund: 30000,
-    funded: 28000,
-    risk: "low" as const,
-    badge: "new" as const,
-  },
-  {
-    id: "3",
-    name: "Kopi Arabika",
-    image: "/coffee-bean-seed-packet-cartoon.jpg",
-    price: 1000,
-    yieldPercent: 25,
-    duration: 90,
-    offtaker: "PT. Kapal Api",
-    targetFund: 100000,
-    funded: 45000,
-    risk: "medium" as const,
-  },
-  {
-    id: "4",
-    name: "Bawang Merah",
-    image: "/onion-seed-packet-cartoon.jpg",
-    price: 400,
-    yieldPercent: 20,
-    duration: 60,
-    offtaker: "PT. ABC Food",
-    targetFund: 40000,
-    funded: 40000,
-    risk: "low" as const,
-    badge: "limited" as const,
-  },
-  {
-    id: "5",
-    name: "Tomat Cherry",
-    image: "/tomato-seed-packet-cartoon-cute.jpg",
-    price: 250,
-    yieldPercent: 12,
-    duration: 25,
-    offtaker: "PT. Heinz",
-    targetFund: 25000,
-    funded: 12000,
-    risk: "low" as const,
-  },
-  {
-    id: "6",
-    name: "Kentang Organik",
-    image: "/potato-seed-packet-cartoon.jpg",
-    price: 600,
-    yieldPercent: 22,
-    duration: 75,
-    offtaker: "PT. Lays",
-    targetFund: 80000,
-    funded: 20000,
-    risk: "medium" as const,
-    badge: "new" as const,
-  },
-  {
-    id: "7",
-    name: "Selada Hidroponik",
-    image: "/cctv-sayur-selada.png",
-    cctvImage: "/cctv-sayur-selada.png",
-    location: "GreenHouse Lembang, Bandung Barat",
-    price: 350,
-    yieldPercent: 16,
-    duration: 21,
-    offtaker: "PT. Sayurbox",
-    targetFund: 35000,
-    funded: 28000,
-    risk: "low" as const,
-    badge: "hot" as const,
-  },
-]
+type SeedData = {
+  id: string
+  name: string
+  image: string
+  price: number
+  yieldPercent: number
+  duration: number
+  offtaker: string
+  targetFund: number
+  funded: number
+  risk: "low" | "medium" | "high"
+  badge?: "hot" | "new" | "limited"
+  cctvImage?: string
+  location?: string
+  description?: string
+}
 
 const filters = ["all", "featured", "lowRisk", "mediumRisk"] as const
+
+function mapInvoiceToSeed(invoice: MarketplaceInvoice): SeedData {
+  const yieldPercent = parseFloat(invoice.yield_percent)
+  const risk: "low" | "medium" | "high" = yieldPercent <= 15 ? "low" : yieldPercent <= 20 ? "medium" : "high"
+  const fundingProgress = invoice.funding_progress
+  const badge: "hot" | "new" | "limited" | undefined = 
+    fundingProgress >= 80 ? "limited" : 
+    fundingProgress <= 30 ? "new" : 
+    yieldPercent >= 18 ? "hot" : undefined
+
+  return {
+    id: invoice.id,
+    name: invoice.name,
+    image: invoice.image_url,
+    price: parseFloat(invoice.target_fund),
+    yieldPercent,
+    duration: invoice.duration_days,
+    offtaker: invoice.farmer_name,
+    targetFund: parseFloat(invoice.target_fund),
+    funded: parseFloat(invoice.total_funded),
+    risk,
+    badge,
+    cctvImage: invoice.farm_cctv_image,
+    location: invoice.farm_location,
+    description: invoice.description,
+  }
+}
 
 export default function ShopPage() {
   const { t } = useLanguage()
   const { user, spendGold, addCrop, earnXp } = useGame()
+  const { token } = useAuthStore()
+  const { syncCrops, getCrops } = useCropStore()
+  const { invoices, isLoading, getInvoices } = useMarketplaceStore()
   const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]>("all")
-  const [selectedSeed, setSelectedSeed] = useState<(typeof mockSeeds)[0] | null>(null)
+  const [selectedSeed, setSelectedSeed] = useState<SeedData | null>(null)
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [purchasedQuantity, setPurchasedQuantity] = useState(0)
+  const [isSyncing, setIsSyncing] = useState(false)
 
-  const filteredSeeds = mockSeeds.filter((seed) => {
+  const fetchInvoices = useCallback(async () => {
+    if (!token) return
+    try {
+      console.log("=== FETCHING MARKETPLACE INVOICES ===")
+      console.log("Token:", token)
+      await getInvoices(token, { limit: 20, sort_by: 'yield_percent', sort_order: 'desc' })
+    } catch (error) {
+      console.error("=== FETCH ERROR ===", error)
+      toast.error("Failed to load marketplace items")
+    }
+  }, [token, getInvoices])
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [fetchInvoices])
+
+  console.log("=== SHOP DATA DEBUG ===")
+  console.log("Token:", token)
+  console.log("Invoices from store:", invoices)
+  console.log("isLoading:", isLoading)
+
+  const seeds: SeedData[] = (invoices || []).map(mapInvoiceToSeed)
+  console.log("Mapped seeds:", seeds)
+
+  const filteredSeeds = seeds.filter((seed) => {
     if (activeFilter === "all") return true
     if (activeFilter === "featured") return seed.badge === "hot" || seed.badge === "new"
     if (activeFilter === "lowRisk") return seed.risk === "low"
@@ -133,25 +114,48 @@ export default function ShopPage() {
     mediumRisk: t.shop.mediumRisk,
   }
 
-  const handleBuyClick = (seed: (typeof mockSeeds)[0]) => {
+  const handleBuyClick = (seed: SeedData) => {
     setSelectedSeed(seed)
     setShowBuyModal(true)
   }
 
-  const handleConfirmPurchase = (quantity: number) => {
+  const handleSyncInvestments = async (txHash?: string) => {
+    if (!token) {
+      toast.error("Please sign in to sync investments")
+      return
+    }
+
+    setIsSyncing(true)
+    try {
+      const result = await syncCrops(token, txHash)
+      
+      if (result.synced_count > 0) {
+        toast.success(`Synced ${result.synced_count} investment(s) from blockchain`)
+        await getCrops(token)
+      } else {
+        toast.info("No new investments to sync")
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to sync investments"
+      toast.error(errorMsg)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const handleConfirmPurchase = async (quantity: number) => {
     if (!selectedSeed) return
 
     const totalCost = selectedSeed.price * quantity
     const success = spendGold(totalCost)
 
     if (success) {
-      // Add crops for each quantity purchased
       for (let i = 0; i < quantity; i++) {
         addCrop({
           name: selectedSeed.name,
           image: selectedSeed.image,
-          cctvImage: (selectedSeed as { cctvImage?: string }).cctvImage,
-          location: (selectedSeed as { location?: string }).location,
+          cctvImage: selectedSeed.cctvImage,
+          location: selectedSeed.location,
           progress: 0,
           daysLeft: selectedSeed.duration,
           yieldPercent: selectedSeed.yieldPercent,
@@ -163,6 +167,8 @@ export default function ShopPage() {
       setPurchasedQuantity(quantity)
       setShowBuyModal(false)
       setShowSuccessModal(true)
+
+      await handleSyncInvestments()
     }
   }
 
@@ -178,7 +184,6 @@ export default function ShopPage() {
       />
 
       <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -187,12 +192,11 @@ export default function ShopPage() {
             </h1>
             <p className="text-sm text-muted-foreground">{t.shop.subtitle}</p>
           </div>
-          <Button variant="outline" size="icon" className="rounded-xl bg-transparent">
+          <Button variant="outline" size="icon" className="rounded-xl bg-transparent cursor-pointer">
             <Filter className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {filters.map((filter) => (
             <Button
@@ -201,7 +205,7 @@ export default function ShopPage() {
               size="sm"
               onClick={() => setActiveFilter(filter)}
               className={cn(
-                "rounded-full px-4 whitespace-nowrap font-semibold transition-all",
+                "rounded-full px-4 whitespace-nowrap font-semibold transition-all cursor-pointer",
                 activeFilter === filter
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : "bg-muted hover:bg-muted/80",
@@ -212,24 +216,32 @@ export default function ShopPage() {
           ))}
         </div>
 
-        {/* Seeds Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {filteredSeeds.map((seed, index) => (
-            <motion.div
-              key={seed.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <SeedCard {...seed} onBuy={() => handleBuyClick(seed)} />
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredSeeds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground">No items available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filteredSeeds.map((seed, index) => (
+              <motion.div
+                key={seed.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <SeedCard {...seed} onBuy={() => handleBuyClick(seed)} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </main>
 
       <BottomNav />
 
-      {/* Buy Modal */}
       {selectedSeed && (
         <BuySeedModal
           isOpen={showBuyModal}
@@ -240,12 +252,11 @@ export default function ShopPage() {
         />
       )}
 
-      {/* Success Modal */}
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Purchase Successful!"
-        message={`You bought ${purchasedQuantity}x ${selectedSeed?.name || "seeds"}`}
+        title={isSyncing ? "Syncing..." : "Purchase Successful!"}
+        message={isSyncing ? "Syncing your investment from blockchain..." : `You bought ${purchasedQuantity}x ${selectedSeed?.name || "seeds"}`}
         reward={{ xp: purchasedQuantity * 10 }}
       />
     </div>
