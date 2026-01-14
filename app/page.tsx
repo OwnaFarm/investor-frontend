@@ -6,6 +6,7 @@ import { GameHeader } from "@/components/layout/game-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { CropCard } from "@/components/game/crop-card"
 import { DailyRewardBanner } from "@/components/game/daily-reward-banner"
+import { FaucetClaimCard } from "@/components/game/faucet-claim-card"
 import { SuccessModal } from "@/components/modals/success-modal"
 import { motion } from "framer-motion"
 import { ChevronRight, Sprout, TrendingUp, Droplets } from "lucide-react"
@@ -63,6 +64,9 @@ export default function HomePage() {
       <main className="px-4 py-4 max-w-lg mx-auto space-y-6">
         {/* Daily Reward Banner */}
         <DailyRewardBanner canClaim={true} rewardAmount={50} onClaim={handleClaimDailyReward} />
+
+        {/* Faucet Claim Card */}
+        <FaucetClaimCard />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3">

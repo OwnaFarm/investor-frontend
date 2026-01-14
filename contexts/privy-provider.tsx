@@ -7,11 +7,28 @@ import { PrivyProvider } from "@privy-io/react-auth"
 import { WagmiProvider } from "@privy-io/wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createConfig, http } from "wagmi"
-import { mantle } from "wagmi/chains"
+import { mantle, mantleSepoliaTestnet } from "wagmi/chains"
 
 interface PrivyWalletProviderProps {
   children: React.ReactNode
 }
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+})
+
+const wagmiConfig = createConfig({
+  chains: [mantleSepoliaTestnet, mantle],
+  transports: {
+    [mantleSepoliaTestnet.id]: http(),
+    [mantle.id]: http(),
+  },
+})
 
 export function PrivyWalletProvider({ children }: PrivyWalletProviderProps) {
   const [mounted, setMounted] = useState(false)
@@ -19,30 +36,6 @@ export function PrivyWalletProvider({ children }: PrivyWalletProviderProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  const queryClient = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-            retry: false,
-          },
-        },
-      }),
-    []
-  )
-
-  const wagmiConfig = useMemo(
-    () =>
-      createConfig({
-        chains: [mantle],
-        transports: {
-          [mantle.id]: http(),
-        },
-      }),
-    []
-  )
 
   const privyConfig = useMemo<PrivyClientConfig>(
     () => ({
@@ -55,16 +48,20 @@ export function PrivyWalletProvider({ children }: PrivyWalletProviderProps) {
       embeddedWallets: {
         createOnLogin: "users-without-wallets",
       },
-      supportedChains: [mantle],
-      defaultChain: mantle,
+      supportedChains: [mantleSepoliaTestnet, mantle],
+      defaultChain: mantleSepoliaTestnet,
     }),
     []
   )
 
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
-  if (!appId || !mounted) {
+  if (!appId) {
     return <>{children}</>
+  }
+
+  if (!mounted) {
+    return null
   }
 
   return (
