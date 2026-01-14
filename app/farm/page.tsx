@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/layout/bottom-nav"
 import { CropCard } from "@/components/game/crop-card"
 import { SuccessModal } from "@/components/modals/success-modal"
 import { CCTVModal } from "@/components/modals/cctv-modal"
+import { CropDetailModal } from "@/components/modals/crop-detail-modal"
 import { motion } from "framer-motion"
 import { Sprout, Droplets, Leaf, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useCropStore, useAuthStore } from "@/stores"
 import { toast } from "sonner"
+import type { Crop } from "@/types"
 
 const tabs = ["all", "growing", "ready"] as const
 
@@ -22,12 +24,14 @@ export default function FarmPage() {
   const { t } = useLanguage()
   const { user, waterCrop: gameWaterCrop, waterAllCrops, harvestCrop: gameHarvestCrop } = useGame()
   const { token } = useAuthStore()
-  const { crops, isLoading, getCrops, waterCrop, syncHarvest } = useCropStore()
+  const { crops, isLoading, selectedCrop, getCrops, getCropDetail, waterCrop, syncHarvest } = useCropStore()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [harvestResult, setHarvestResult] = useState({ title: "", message: "", gold: 0, xp: 0 })
   const [cctvOpen, setCctvOpen] = useState(false)
-  const [selectedCrop, setSelectedCrop] = useState<any>(null)
+  const [cctvCrop, setCctvCrop] = useState<Crop | null>(null)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
     if (token) {
@@ -50,6 +54,25 @@ export default function FarmPage() {
 
   const growingCount = (crops || []).filter((c) => c.status === "growing").length
   const readyCount = (crops || []).filter((c) => c.status === "ready").length
+
+  const handleViewDetail = async (cropId: string) => {
+    if (!token) {
+      toast.error("Please sign in to view crop details")
+      return
+    }
+
+    setDetailLoading(true)
+    setDetailModalOpen(true)
+
+    try {
+      await getCropDetail(token, cropId)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to load crop details"
+      toast.error(errorMsg)
+    } finally {
+      setDetailLoading(false)
+    }
+  }
 
   const handleWater = async (cropId: string) => {
     if (!token) {
@@ -87,6 +110,7 @@ export default function FarmPage() {
         xp: 50,
       })
       setShowSuccessModal(true)
+      setDetailModalOpen(false)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to harvest crop"
       toast.error(errorMsg)
@@ -100,7 +124,7 @@ export default function FarmPage() {
   const handleViewCCTV = (cropId: string) => {
     const crop = (crops || []).find((c) => c.id === cropId)
     if (crop) {
-      setSelectedCrop(crop)
+      setCctvCrop(crop)
       setCctvOpen(true)
     }
   }
@@ -179,6 +203,8 @@ export default function FarmPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
+                onClick={() => handleViewDetail(crop.id)}
+                className="cursor-pointer"
               >
                 <CropCard
                   id={crop.id}
@@ -223,15 +249,25 @@ export default function FarmPage() {
         reward={{ gold: harvestResult.gold, xp: harvestResult.xp }}
       />
 
-      {selectedCrop && (
+      {cctvCrop && (
         <CCTVModal
           isOpen={cctvOpen}
           onClose={() => setCctvOpen(false)}
-          cropName={selectedCrop.name}
-          location={selectedCrop.location || "West Java Farm, Block B"}
-          imageUrl={selectedCrop.cctv_image || selectedCrop.image}
+          cropName={cctvCrop.name}
+          location={cctvCrop.location || "West Java Farm, Block B"}
+          imageUrl={cctvCrop.cctv_image || cctvCrop.image}
         />
       )}
+
+      <CropDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        crop={selectedCrop}
+        isLoading={detailLoading}
+        onWater={selectedCrop ? () => handleWater(selectedCrop.id) : undefined}
+        onHarvest={selectedCrop ? () => handleHarvest(selectedCrop.id) : undefined}
+        canWater={user.water > 0}
+      />
     </div>
   )
 }

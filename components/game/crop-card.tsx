@@ -11,6 +11,8 @@ interface CropCardProps {
   id: string
   name: string
   image: string
+  cctvImage?: string
+  location?: string
   progress: number
   daysLeft: number
   yieldPercent: number
