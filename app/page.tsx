@@ -83,7 +83,7 @@ export default function HomePage() {
   }
 
   const handleClaimDailyReward = () => {
-    earnGold(50)
+    earnGold(10000)
   }
 
   return (
@@ -98,7 +98,7 @@ export default function HomePage() {
       />
 
       <main className="px-4 py-4 max-w-lg mx-auto space-y-6">
-        <DailyRewardBanner canClaim={true} rewardAmount={50} onClaim={handleClaimDailyReward} />
+        <DailyRewardBanner canClaim={true} rewardAmount={10000} onClaim={handleClaimDailyReward} />
 
         <FaucetClaimCard />
 

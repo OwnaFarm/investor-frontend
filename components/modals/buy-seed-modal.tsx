@@ -73,9 +73,9 @@ export function BuySeedModal({ isOpen, onClose, onConfirm, seed, userGold }: Buy
             initial={{ opacity: 0, y: 100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-start justify-center pt-16 overflow-y-auto"
           >
-            <div className="bg-card rounded-t-3xl p-6 max-w-lg mx-auto border-t-4 border-primary">
+            <div className="bg-card rounded-3xl p-6 max-w-lg w-full mx-4 mb-8 border border-border shadow-xl relative">
               {/* Close Button */}
               <button
                 onClick={onClose}

@@ -7,6 +7,7 @@ import { GameHeader } from "@/components/layout/game-header"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { CropCard } from "@/components/game/crop-card"
 import { SuccessModal } from "@/components/modals/success-modal"
+import { WaterSuccessModal } from "@/components/modals/water-success-modal"
 import { CCTVModal } from "@/components/modals/cctv-modal"
 import { CropDetailModal } from "@/components/modals/crop-detail-modal"
 import { motion } from "framer-motion"
@@ -24,21 +25,23 @@ export default function FarmPage() {
   const { t } = useLanguage()
   const { user, waterCrop: gameWaterCrop, waterAllCrops, harvestCrop: gameHarvestCrop } = useGame()
   const { token } = useAuthStore()
-  const { crops, isLoading, selectedCrop, getCrops, getCropDetail, waterCrop, syncHarvest } = useCropStore()
+  const { crops, isLoading, selectedCrop, getCrops, getCropDetail, waterCrop, waterAllCrops: storeWaterAllCrops, syncHarvest } = useCropStore()
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [harvestResult, setHarvestResult] = useState({ title: "", message: "", gold: 0, xp: 0 })
+  const [waterAllResult, setWaterAllResult] = useState({ title: "", message: "", water: 0, xp: 0 })
+  const [showWaterAllModal, setShowWaterAllModal] = useState(false)
+  const [waterResult, setWaterResult] = useState({ title: "", message: "", xp: 0 })
+  const [showWaterModal, setShowWaterModal] = useState(false)
   const [cctvOpen, setCctvOpen] = useState(false)
   const [cctvCrop, setCctvCrop] = useState<Crop | null>(null)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
-    if (token) {
-      getCrops(token).catch((error) => {
-        console.error('Failed to load crops:', error)
-      })
-    }
+    getCrops(token || '').catch((error) => {
+      console.error('Failed to load crops:', error)
+    })
   }, [token, getCrops])
 
   const filteredCrops = (crops || []).filter((crop) => {
@@ -75,15 +78,16 @@ export default function FarmPage() {
   }
 
   const handleWater = async (cropId: string) => {
-    if (!token) {
-      toast.error("Please sign in to water crops")
-      return
-    }
-
     try {
-      const result = await waterCrop(token, cropId)
+      const result = await waterCrop(token || '', cropId)
       gameWaterCrop(cropId)
-      toast.success(`Gained ${result.xp_gained} XP! Water remaining: ${result.water_remaining}`)
+      const crop = (crops || []).find((c) => c.id === cropId)
+      setWaterResult({
+        title: "Watered!",
+        message: `${crop?.name || "Crop"} has been watered successfully!`,
+        xp: result.xp_gained,
+      })
+      setShowWaterModal(true)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to water crop"
       toast.error(errorMsg)
@@ -117,8 +121,24 @@ export default function FarmPage() {
     }
   }
 
-  const handleWaterAll = () => {
-    waterAllCrops()
+  const handleWaterAll = async () => {
+    try {
+      const result = await storeWaterAllCrops(token || '')
+      if (result.watered_count > 0) {
+        setWaterAllResult({
+          title: "Water All Complete!",
+          message: `Successfully watered ${result.watered_count} crops`,
+          water: result.watered_count,
+          xp: result.xp_gained,
+        })
+        setShowWaterAllModal(true)
+      } else {
+        toast.info("No crops to water")
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to water crops"
+      toast.error(errorMsg)
+    }
   }
 
   const handleViewCCTV = (cropId: string) => {
@@ -153,8 +173,8 @@ export default function FarmPage() {
           </div>
           <Button
             onClick={handleWaterAll}
-            disabled={user.water < growingCount || growingCount === 0}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold gap-2"
+            disabled={growingCount === 0}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold gap-2 cursor-pointer"
           >
             <Droplets className="w-4 h-4" />
             {t.home.waterAll}
@@ -247,6 +267,22 @@ export default function FarmPage() {
         title={harvestResult.title}
         message={harvestResult.message}
         reward={{ gold: harvestResult.gold, xp: harvestResult.xp }}
+      />
+
+      <WaterSuccessModal
+        isOpen={showWaterAllModal}
+        onClose={() => setShowWaterAllModal(false)}
+        title={waterAllResult.title}
+        message={waterAllResult.message}
+        reward={{ water: waterAllResult.water, xp: waterAllResult.xp }}
+      />
+
+      <WaterSuccessModal
+        isOpen={showWaterModal}
+        onClose={() => setShowWaterModal(false)}
+        title={waterResult.title}
+        message={waterResult.message}
+        reward={{ xp: waterResult.xp }}
       />
 
       {cctvCrop && (

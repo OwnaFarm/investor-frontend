@@ -66,7 +66,7 @@ export default function ShopPage() {
   const { t } = useLanguage()
   const { user, spendGold, addCrop, earnXp } = useGame()
   const { token } = useAuthStore()
-  const { syncCrops, getCrops } = useCropStore()
+  const { syncCrops, getCrops, addMockCrop } = useCropStore()
   const { invoices, isLoading, getInvoices } = useMarketplaceStore()
   const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]>("all")
   const [selectedSeed, setSelectedSeed] = useState<SeedData | null>(null)
@@ -76,14 +76,10 @@ export default function ShopPage() {
   const [isSyncing, setIsSyncing] = useState(false)
 
   const fetchInvoices = useCallback(async () => {
-    if (!token) return
     try {
-      console.log("=== FETCHING MARKETPLACE INVOICES ===")
-      console.log("Token:", token)
-      await getInvoices(token, { limit: 20, sort_by: 'yield_percent', sort_order: 'desc' })
+      await getInvoices(token || '', { limit: 20, sort_by: 'yield_percent', sort_order: 'desc' })
     } catch (error) {
-      console.error("=== FETCH ERROR ===", error)
-      toast.error("Failed to load marketplace items")
+      console.error("Failed to load marketplace items:", error)
     }
   }, [token, getInvoices])
 
@@ -91,13 +87,7 @@ export default function ShopPage() {
     fetchInvoices()
   }, [fetchInvoices])
 
-  console.log("=== SHOP DATA DEBUG ===")
-  console.log("Token:", token)
-  console.log("Invoices from store:", invoices)
-  console.log("isLoading:", isLoading)
-
   const seeds: SeedData[] = (invoices || []).map(mapInvoiceToSeed)
-  console.log("Mapped seeds:", seeds)
 
   const filteredSeeds = seeds.filter((seed) => {
     if (activeFilter === "all") return true
@@ -151,6 +141,16 @@ export default function ShopPage() {
 
     if (success) {
       for (let i = 0; i < quantity; i++) {
+        addMockCrop({
+          name: selectedSeed.name,
+          image: selectedSeed.image,
+          cctvImage: selectedSeed.cctvImage,
+          location: selectedSeed.location,
+          price: selectedSeed.price,
+          yieldPercent: selectedSeed.yieldPercent,
+          duration: selectedSeed.duration,
+        })
+        
         addCrop({
           name: selectedSeed.name,
           image: selectedSeed.image,
@@ -167,8 +167,14 @@ export default function ShopPage() {
       setPurchasedQuantity(quantity)
       setShowBuyModal(false)
       setShowSuccessModal(true)
+      
+      toast.success(`Successfully purchased ${quantity}x ${selectedSeed.name}`)
 
-      await handleSyncInvestments()
+      if (token) {
+        await handleSyncInvestments()
+      }
+    } else {
+      toast.error("Not enough gold to complete purchase")
     }
   }
 
